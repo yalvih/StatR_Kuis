@@ -14,6 +14,8 @@ library(TeachingDemos)
 library(mlbench)
 library(mosaicData)
 
+#1
+
 #dbInit
 data("BostonHousing")
 View(BostonHousing)
@@ -167,7 +169,10 @@ var.test(boston$medv,corrected$cmedv,alternative = "two.sided")
 # asumsikan h0 adalah apakah data tersebut sama
 # ha adalah data tersebut berbeda
 
-t.test(boston$medv,corrected$cmedv,alternative = "two.sided",paired = T)
+data_medv_10_more <- filter(boston, medv > 10)
+data_cmedv_10_more <- filter(corrected, cmedv > 10)
+
+t.test(data_medv_10_more$medv,data_cmedv_10_more$cmedv,alternative = "two.sided",paired = T)
 
 #hasilnya nilai p valuenya lebih besar dari h0 nya yang berarti H0 diterima. Hal ini berarti data tersebut sama saja dan tidak berbeda sama sekali.
 
@@ -221,5 +226,91 @@ ggplot(boston, aes(x=medv, y=rad))+
   ylab("Indeks Aksesbilitas ke Jalan Raya")+
   ggtitle("Scatterplot Hubungan Nilai Median Rumah dengan Indeks Aksesbilitas ke Jalan Raya")
 
+detach(boston)
 #6
+
+#a
+attach(boston)
+boston.in1 <- lm(medv ~ crim + cat_zn + indus + chas + nox + rm + age + dis + rad + tax + ptratio + b + lstat, data = boston)
+summary(boston.in1)
+
+boston.in2 <- lm(medv ~ crim + cat_zn + chas + nox + rm + dis + rad + ptratio + b + lstat, data = boston)
+summary(boston.in2)
+
+boston.in3 <- lm(medv ~ crim + chas + nox + rm + dis + ptratio + b + lstat, data = boston)
+summary(boston.in3)
+
+boston.in4 <- lm(medv ~ chas + nox + rm + dis + ptratio + lstat, data = boston)
+summary(boston.in4)
+
+boston.in5 <- lm(medv ~ nox + rm + dis + ptratio + lstat, data = boston)
+summary(boston.in5)
+
+boston.int1 <- lm(medv ~ crim*cat_zn, data = boston)
+summary(boston.int1)
+
+boston.int2 <- lm(medv ~ crim*nox, data = boston)
+summary(boston.int2)
+
+boston.int3 <- lm(medv ~ nox*rm, data = boston)
+summary(boston.int3)
+
+boston.int4 <- lm(medv ~ rm*lstat, data = boston)
+summary(boston.int4)
+
+boston.int5 <- lm(medv ~ b*dis, data = boston)
+summary(boston.int5)
+
+#aic
+AIC(boston.in1)
+AIC(boston.in2)
+AIC(boston.in3)
+AIC(boston.in4)
+AIC(boston.in5)
+
+#aic interaksi
+AIC(boston.int1)
+AIC(boston.int2)
+AIC(boston.int3)
+AIC(boston.int4)
+AIC(boston.int5)
+
+#r_squared
+summary(boston.in1)
+summary(boston.in2)
+summary(boston.in3)
+summary(boston.in4)
+summary(boston.in5)
+summary(boston.int1)
+summary(boston.int2)
+summary(boston.int3)
+summary(boston.int4)
+summary(boston.int5)
+
+#hanya eksperimental saja
+boston.in6 <- lm(medv ~ nox + rm*lstat + dis + ptratio, data = boston)
+summary(boston.in6)
+
+#b
+stepwise_in1 <- step(boston.in1,direction = "both")
+summary(stepwise_in1)
+AIC(stepwise_in1)
+extractAIC
+
+stepwise_int4 <- step(boston.int4,direction = "both")
+summary(stepwise_int4)
+AIC(stepwise_int4)
+extractAIC(stepwise_int4)
+
+backward_in1 <- step(boston.in1,direction = "backward")
+summary(stepwise_in1)
+AIC(stepwise_in1)
+extractAIC(stepwise_in1)
+
+backward_int4 <- step(boston.int4,direction = "backward")
+summary(stepwise_int4)
+AIC(stepwise_int4)
+extractAIC(stepwise_int4)
+
+#c
 
