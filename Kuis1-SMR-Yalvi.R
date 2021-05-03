@@ -56,33 +56,74 @@ for (i in 1:dim(BostonHousing)[1]) {
   }
 }
 
-ggplot(boston, aes(x = "", y = cat_zn,fill=factor(cat_zn)))+
-  geom_bar(stat = "identity", width = 1)+
-  ggtitle("Piechart Proporsi Tempat Tinggal")+
-  guides(fill=guide_legend("Tipe Proporsi Tanah"))+
-  coord_polar("y",start=0)+
-  theme_void()+
-  scale_fill_brewer(palette="Set2")
+ggplot(boston, aes(x = zn))+
+  geom_density()+
+  ggtitle("Piechart Proporsi Tempat Tinggal")
 
 attach(BostonHousing)
 shapiro.test(zn)
 
 #eksplorasi NOX
-shapiro.test(nox)
+summary(boston$nox)
+
+boston$cat_nox = "a"
+for (i in 1:dim(BostonHousing)[1]) {
+  if(boston$nox[i] >= 0.0 & boston$nox[i] <= 0.53){
+    boston$cat_nox[i] = "Rendah"
+  } else if(boston$nox[i] > 0.53 & boston$nox[i] <= 0.62) {
+    boston$cat_nox[i] = "Sedang"
+  } else {
+    boston$cat_nox[i] = "Tinggi"
+  }
+}
+
+par(mfrow = c(2,2))
+h1 <- hist(nox, 
+           main = "Histogram Kadar Nitrat Oksida",
+           xlab = "Tingkat Konsentrasi")
+xfit<-seq(min(nox),max(nox),length=40)
+yfit<-dnorm(xfit,mean=mean(nox),sd=sd(nox))
+yfit<-yfit*diff(h1$mids[1:2])*length(nox)
+lines(xfit, yfit, col="red", lwd=2)
 
 #eksplorasi RAD
-ggplot(boston, aes(x = factor(rad)))+
-  geom_bar(fill="orange")+
-  xlab("Indeks Aksesbilitas")+
-  ylab("Freq")+
-  ggtitle("Barplot Proporsi Tempat Tinggal")
+ggplot(boston, aes(x = "", y = rad,fill=factor(rad)))+
+  geom_bar(stat = "identity", width = 1)+
+  ggtitle("Piechart Proporsi Tempat Tinggal")+
+  guides(fill=guide_legend("Tipe Proporsi Tanah"))+
+  coord_polar("y",start=0)+
+  theme_void()+
+  scale_fill_brewer(palette="Set3")
 
 #eksplorasi LSTAT
 summary(lstat)
 
+boston$cat_lstat = "a"
+for (i in 1:dim(BostonHousing)[1]) {
+  if(boston$lstat[i] >= 0.0 & boston$lstat[i] <= 11.36){
+    boston$cat_lstat[i] = "Rendah"
+  } else if(boston$lstat[i] > 11.36 & boston$lstat[i] <= 16.95) {
+    boston$cat_lstat[i] = "Sedang"
+  } else {
+    boston$cat_lstat[i] = "Tinggi"
+  }
+}
+
+ggplot(boston, aes(x=cat_lstat, y=lstat))+
+  geom_boxplot()+
+  xlab("Kategori Tingkat Status Rendah")+
+  ylab("Tingat Angka Status Rendah")+
+  ggtitle("Boxplot Tingkat Penduduk Berstatus Rendah")
+
 #eksplorasi chas
 ggplot(boston, aes(x = chas))+
   geom_dotplot(binaxis='x', stackdir='center')
+
+ggplot(boston, aes(x = factor(chas)))+
+  geom_bar(fill="orange")+
+  xlab("Indeks Dekatnya Rumah dengan Sungai Charles")+
+  ylab("Freq")+
+  ggtitle("Barplot Jumlah Rumah dengan Dekatnya ")
 
 #3
 
@@ -96,18 +137,34 @@ interaction.plot(x.factor = cat_zn,
                  trace.factor = chas, 
                  response = nox, 
                  main="Interaction Plot of Nitrite Oxide by Proportion Tanah*Sungai Charles", 
-                 xlab = "Proprotion", ylab = "Nox (per 10 mil)",
+                 xlab = "chas", ylab = "Nox (per 10 mil)",
                  col=c("red","blue","green"))
+
+interaction.plot(x.factor = chas, 
+                 trace.factor = cat_zn, 
+                 response = nox, 
+                 main="Interaction Plot of Nitrite Oxide by Proportion Tanah*Sungai Charles", 
+                 xlab = "cat_zn", ylab = "Nox (per 10 mil)",
+                 col=c("red","blue","green"))
+
 
 interaction.plot(x.factor = rad, 
                  trace.factor = chas, 
-                 response = nox, 
-                 main="Interaction Plot of Nitrite Oxide by Proportion Tanah*Sungai Charles", 
-                 xlab = "Proprotion", ylab = "Nox (per 10 mil)",
+                 response = medv, 
+                 main="Interaction Plot of Median Harga Rumah by Rad*Sungai Charles", 
+                 xlab = "rad", ylab = "Nox (per 10 mil)",
+                 col=c("red","blue","green"))
+
+interaction.plot(x.factor = chas, 
+                 trace.factor = rad, 
+                 response = medv, 
+                 main="Interaction Plot of Median Harga Rumah by Rad*Sungai Charles", 
+                 xlab = "chas", ylab = "medv",
                  col=c("red","blue","green"))
 
 #4
 
+str(boston)
 #uji statistik
 #dketahui 22 untuk niali diujinya. Perlu ada ui statistik t-test
 
@@ -115,8 +172,6 @@ interaction.plot(x.factor = rad,
 # Hipotesis Alt adalah apakah lebih besar dari 22
 
 attach(boston)
-avg_medv <- mean(medv,na.rm = TRUE)
-avg_medv
 
 shapiro.test(medv)
 
@@ -234,6 +289,12 @@ attach(boston)
 boston.in1 <- lm(medv ~ crim + cat_zn + indus + chas + nox + rm + age + dis + rad + tax + ptratio + b + lstat, data = boston)
 summary(boston.in1)
 
+#persamaan matematisnya adalah
+
+# nilaiMed = 39.59 - 0.11*crim - 3.36*cat_znKecil - 3.05*cat_znSedang + 0.02*indus + 2.32chas1 - 17.52*nox + 3.72*rm + 0.001*age
+#            - 1.46*dis + 1.39*rad2 + 4.62*rad3 + 2.16*rad4 + 2.77*rad5 + 1.24*rad6 + 5.61*rad7 + 4.82*rad8 + 7.84*rad24 - 0.01*tax
+#            - 1.04*ptratio + 0.01*b - 0.52*lstat
+
 boston.in2 <- lm(medv ~ crim + cat_zn + chas + nox + rm + dis + rad + ptratio + b + lstat, data = boston)
 summary(boston.in2)
 
@@ -295,7 +356,7 @@ summary(boston.in6)
 stepwise_in1 <- step(boston.in1,direction = "both")
 summary(stepwise_in1)
 AIC(stepwise_in1)
-extractAIC
+extractAIC(stepwise_in1)
 
 stepwise_int4 <- step(boston.int4,direction = "both")
 summary(stepwise_int4)
@@ -311,6 +372,4 @@ backward_int4 <- step(boston.int4,direction = "backward")
 summary(stepwise_int4)
 AIC(stepwise_int4)
 extractAIC(stepwise_int4)
-
-#c
 
