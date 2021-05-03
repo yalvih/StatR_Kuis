@@ -212,24 +212,17 @@ t.test(data_charles_near$medv,data_charles_no_near$medv)
 #c
 corrected <- read.delim('corrected.txt')
 
-#lakukan uji normalitas
-shapiro.test(boston$medv)
-shapiro.test(corrected$cmedv)
-
 #asumsikan data sudah berpasangan dan hasilnya pun sama
 var.test(boston$medv,corrected$cmedv,alternative = "two.sided")
 
 #t.test berpasangan
 
-# asumsikan h0 adalah apakah data tersebut sama
-# ha adalah data tersebut berbeda
+# asumsikan h0 adalah apakah data tersebut sama dengan 10
+# ha adalah data tersebut lebih kecil dari 10
 
-data_medv_10_more <- filter(boston, medv > 10)
-data_cmedv_10_more <- filter(corrected, cmedv > 10)
+t.test(corrected$cmedv,boston$medv,alternative = "less",var.equal = T,mu=10)
 
-t.test(data_medv_10_more$medv,data_cmedv_10_more$cmedv,alternative = "two.sided",paired = T)
-
-#hasilnya nilai p valuenya lebih besar dari h0 nya yang berarti H0 diterima. Hal ini berarti data tersebut sama saja dan tidak berbeda sama sekali.
+#hasilnya nilai p valuenya lebih kecil dari h0 nya yang berarti H0 ditolak. Ha diterima lebih kecil dari 10.
 
 #5
 #crim
